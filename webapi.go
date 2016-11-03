@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"github.com/gorilla/websocket"
-	serial "go.bug.st/serial"
+	serial "go.bug.st/serial.v1"
 	"log"
 	"net/http"
 	"strconv"
@@ -67,24 +67,22 @@ func handleWSConnect(w http.ResponseWriter, r *http.Request) {
 	// TODO: Make this configurable (from get params) - although I never saw anything in use but xxxN81 ;)
 	mode := &serial.Mode{
 		BaudRate: baudRate,
-		Parity:   serial.PARITY_NONE,
+		Parity:   serial.NoParity,
 		DataBits: 8,
-		StopBits: serial.STOPBITS_ONE,
+		StopBits: serial.OneStopBit,
 	}
 
-	port, err := serial.OpenPort(devicePath, mode)
+	port, err := serial.Open(devicePath, mode)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	defer port.Close()
 
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print("Upgrade:", err)
 		return
 	}
-	defer c.Close()
 
 	log.Print("WebSocket ok")
 
@@ -92,30 +90,31 @@ func handleWSConnect(w http.ResponseWriter, r *http.Request) {
 
 	go func() {
 		for {
-			n, err := port.Read(buff)
+			n, err := port.Read(buff) // TODO: Non-blocking
 			if err != nil {
 				log.Println(err.Error())
 				break
 			}
-			if n == 0 {
-				log.Println("\nEOF")
-				break
+			if n > 0 {
+				_ = c.WriteMessage(websocket.BinaryMessage, buff[:n])
 			}
 			// log.Printf("Length: %d, data: %v", n, buff[:n])
-			_ = c.WriteMessage(websocket.BinaryMessage, buff[:n])
 		}
-		port.Close()
+		log.Println("[Serial port closed] - close WS...")
 		c.Close()
 	}()
 
-	for {
-		_, message, err := c.ReadMessage()
-		if err != nil {
-			log.Println("[WS] Error:", err)
-			break
+	go func() {
+		for {
+			_, message, err := c.ReadMessage()
+			if err != nil {
+				log.Println("[WS] Error:", err)
+				break
+			}
+			log.Printf("[WS -> Serial] Sending: %v, '%s'", message, string(message))
+			port.Write(message)
 		}
-		log.Printf("[WS -> Serial] Sending: %v, '%s'", message, string(message))
-		port.Write(message)
-	}
-	log.Println("Closing connection for ", devicePath)
+		log.Println("[WS closed] - close serial port...")
+		port.Close()
+	}()
 }
