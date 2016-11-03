@@ -97,6 +97,9 @@ func handleWSConnect(w http.ResponseWriter, r *http.Request) {
 			}
 			if n > 0 {
 				_ = c.WriteMessage(websocket.BinaryMessage, buff[:n])
+			} else {
+				log.Println("EOF")
+				break
 			}
 			// log.Printf("Length: %d, data: %v", n, buff[:n])
 		}
