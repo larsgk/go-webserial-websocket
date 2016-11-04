@@ -1,3 +1,5 @@
+/*jshint esversion: 6 */
+
 var JsonToArray = function(json)
 {
     var str = JSON.stringify(json, null, 0);
@@ -5,7 +7,7 @@ var JsonToArray = function(json)
     for (var i = 0; i < str.length; i++) {
         ret[i] = str.charCodeAt(i);
     }
-    return ret
+    return ret;
 };
 
 var binArrayToJson = function(binArray)
@@ -14,8 +16,8 @@ var binArrayToJson = function(binArray)
     for (var i = 0; i < binArray.length; i++) {
         str += String.fromCharCode(parseInt(binArray[i]));
     }
-    return JSON.parse(str)
-}
+    return JSON.parse(str);
+};
 
 var binArrayToString = function(binArray)
 {
@@ -24,12 +26,12 @@ var binArrayToString = function(binArray)
         str += String.fromCharCode(parseInt(binArray[i]));
     }
     return str;
-}
+};
 
 function handleMessage(message) {
     console.log("HANDLE JSON RESPONSE: ", message);
     try {
-        var json = JSON.parse(message)
+        var json = JSON.parse(message);
         console.log("It's JSON!", json);
 
         document.getElementById("lastmsg").innerHTML=JSON.stringify(json);
@@ -39,7 +41,7 @@ function handleMessage(message) {
             send_set_rgb(Math.abs(accData[0]&0xff), Math.abs(accData[1]&0xff), Math.abs(accData[2]&0xff));
         }
     } catch (e) {
-        console.log(e)
+        console.log(e);
     }
 }
 
@@ -59,7 +61,7 @@ var thePort = null;
 
 function send_CMD(json) {
     if(thePort) {
-        var encoded = JsonToArray(json)
+        var encoded = JsonToArray(json);
         thePort.write(encoded.buffer);
     }
 }
@@ -97,14 +99,14 @@ function connectionClosed() {
 function scan() {
     isScanning = true;
     SerialPort.requestPorts([empiriKitPnPFilter]).then( function(reply) {
-      console.log("Serial port list: ", reply);
+        console.log("Serial port list: ", reply);
 
-      if(reply.length == 1) {
-        thePort = new SerialPort(reply[0].path, {baudrate:57600});
-        thePort.onClose = connectionClosed;
-        thePort.connect(onReceiveCallback).then( () => { isConnected = true; send_init(); });
-      }
-      isScanning = false;
+        if(reply.length == 1) {
+            thePort = new SerialPort(reply[0].path, {baudrate:57600});
+            thePort.onClose = connectionClosed;
+            thePort.connect(onReceiveCallback).then( () => { isConnected = true; send_init(); });
+        }
+        isScanning = false;
     });
 }
 
