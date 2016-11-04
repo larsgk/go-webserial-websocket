@@ -32,6 +32,8 @@ function handleMessage(message) {
         var json = JSON.parse(message)
         console.log("It's JSON!", json);
 
+        document.getElementById("lastmsg").innerHTML=JSON.stringify(json);
+
         if(json.datatype === "StreamData" && json.accelerometerdata) {
             var accData = json.accelerometerdata;
             send_set_rgb(Math.abs(accData[0]&0xff), Math.abs(accData[1]&0xff), Math.abs(accData[2]&0xff));
@@ -89,6 +91,7 @@ var isScanning = false;
 
 function connectionClosed() {
     isConnected = false;
+    document.getElementById("lastmsg").innerHTML="N/A";
 }
 
 function scan() {

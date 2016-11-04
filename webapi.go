@@ -3,7 +3,8 @@ package main
 import (
 	"encoding/json"
 	"github.com/gorilla/websocket"
-	serial "go.bug.st/serial.v1"
+	//serial "go.bug.st/serial.v1"
+	"github.com/larsgk/serial"
 	"log"
 	"net/http"
 	"strconv"
@@ -65,14 +66,16 @@ func handleWSConnect(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: Make this configurable (from get params) - although I never saw anything in use but xxxN81 ;)
-	mode := &serial.Mode{
-		BaudRate: baudRate,
-		Parity:   serial.NoParity,
-		DataBits: 8,
-		StopBits: serial.OneStopBit,
-	}
+	// mode := &serial.Mode{
+	// 	BaudRate: baudRate,
+	// 	Parity:   serial.NoParity,
+	// 	DataBits: 8,
+	// 	StopBits: serial.OneStopBit,
+	// }
 
-	port, err := serial.Open(devicePath, mode)
+	// port, err := serial.Open(devicePath, mode)
+
+	port, err := serial.Open(&serial.Config{Address: devicePath, BaudRate: baudRate})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -86,11 +89,11 @@ func handleWSConnect(w http.ResponseWriter, r *http.Request) {
 
 	log.Print("WebSocket ok")
 
-	buff := make([]byte, 2048) // 512 bytes is max for high speed USB (so this leaves space for minimum 4 packages)
+	buff := make([]byte, 512) // 512 bytes is max for high speed USB
 
 	go func() {
 		for {
-			n, err := port.Read(buff) // TODO: Non-blocking
+			n, err := port.Read(buff)
 			if err != nil {
 				log.Println(err.Error())
 				break
