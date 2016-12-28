@@ -2,7 +2,7 @@ package main
 
 import (
 	"bufio"
-	serial "go.bug.st/serial"
+	serial "go.bug.st/serial.v1"
 	"log"
 	"os/exec"
 	"strconv"

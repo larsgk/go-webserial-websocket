@@ -3,8 +3,7 @@ package main
 import (
 	"encoding/json"
 	"github.com/gorilla/websocket"
-	//serial "go.bug.st/serial.v1"
-	"github.com/larsgk/serial"
+	serial "go.bug.st/serial.v1"
 	"log"
 	"net/http"
 	"strconv"
@@ -65,17 +64,16 @@ func handleWSConnect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Make this configurable (from get params) - although I never saw anything in use but xxxN81 ;)
-	// mode := &serial.Mode{
-	// 	BaudRate: baudRate,
-	// 	Parity:   serial.NoParity,
-	// 	DataBits: 8,
-	// 	StopBits: serial.OneStopBit,
-	// }
+	//TODO: Make this configurable (from get params) - although I never saw anything in use but xxxN81 ;)
+	mode := &serial.Mode{
+		BaudRate: baudRate,
+		Parity:   serial.NoParity,
+		DataBits: 8,
+		StopBits: serial.OneStopBit,
+	}
 
-	// port, err := serial.Open(devicePath, mode)
+	port, err := serial.Open(devicePath, mode)
 
-	port, err := serial.Open(&serial.Config{Address: devicePath, BaudRate: baudRate})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
